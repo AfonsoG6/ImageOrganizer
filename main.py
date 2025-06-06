@@ -15,12 +15,14 @@ NAME_FORMATS: list[str] = [
     "Screenshot_%Y%m%d-%H%M%S",
     "MVIMG_%Y%m%d_%H%M%S",
     "VID_%Y%m%d_%H%M%S",
+    "VID_%Y%m%d_%H%M%S_HDR10PLUS",
     "IMG_%Y%m%d",
     "%Y%m%d_%H%M%S",
     "VID-%Y%m%d-WA",
     "IMG-%Y%m%d-WA",
     "YIP_%Y%m%d_%H%M%S",
     "%Y-%m-%d %H-%M-%S",
+    "PANO_%Y%m%d_%H%M%S",
 ]
 
 

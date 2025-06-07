@@ -182,6 +182,7 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
         if tag.check(tags):
             print(f"Found date in tag {tag} for {filepath}")
             datestr = tag.get(tags)
+            new_filepath = get_target_path(filepath, datestr)
             break
     else:
         datestr = get_date_from_filename(filepath)

@@ -189,11 +189,8 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
             print("Found date in filename for", filepath)
             datestr = add_delta(datestr, delta)
             datestr = convert_24(datestr)
+            update_metadata(filepath, datestr)
             new_filepath = get_target_path(filepath, datestr)
-            processed += 1
-            shutil.move(filepath, new_filepath)
-            update_metadata(new_filepath, datestr)
-            print(f"[{processed}] Moving/Renaming {filepath} to {new_filepath}")
         else:
             print("No date found for", filepath)
             with open(LOG_PATH, "a") as f:
@@ -204,10 +201,9 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
             if not os.path.exists(datelesspath):
                 os.makedirs(datelesspath)
             new_filepath = os.path.join(datelesspath, os.path.basename(filepath))
-            processed += 1
-            shutil.move(filepath, new_filepath)
-            print(f"[{processed}] Moving {filepath} to {new_filepath}")
-            return
+    processed += 1
+    shutil.move(filepath, new_filepath)
+    print(f"[{processed}] Moving {filepath} to {new_filepath}")
 
 
 def process_directory(dirpath: str, outpath: str, delta: int = 0):

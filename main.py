@@ -25,6 +25,7 @@ NAME_FORMATS: list[str] = [
     "PANO_%Y%m%d_%H%M%S",
 ]
 
+processed: int = 0
 
 class Tag:
     def __init__(self, name: str):
@@ -175,7 +176,6 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
         or filepath.endswith(".html")
     ):
         return
-    processed: int = 0
     with exiftool.ExifToolHelper() as exif:
         tags = exif.get_metadata([filepath])[0]
     for tag in DATE_TAGS:

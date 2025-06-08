@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
 import os, shutil, json, exiftool
+from lib import hashes_db
 
 LOG_PATH = "errors.log"
 
@@ -25,7 +26,10 @@ NAME_FORMATS: list[str] = [
     "PANO_%Y%m%d_%H%M%S",
 ]
 
-processed: int = 0
+HASHES_DB_FILENAME = "hashes.json"
+HASHES_DB: dict[str, list[str]]
+
+n_processed: int = 0
 
 class Tag:
     def __init__(self, name: str):
@@ -168,6 +172,7 @@ def update_metadata(filepath: str, datestr: str):
 
 
 def process_file(filepath: str, outpath: str, delta: int = 0):
+    global n_processed
     if (
         filepath.endswith(".py")
         or filepath.endswith(".json")
@@ -202,9 +207,14 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
             if not os.path.exists(datelesspath):
                 os.makedirs(datelesspath)
             new_filepath = os.path.join(datelesspath, os.path.basename(filepath))
-    processed += 1
-    shutil.move(filepath, new_filepath)
-    print(f"[{processed}] Moving {filepath} to {new_filepath}")
+    n_processed += 1
+    subdir = os.path.basename(os.path.dirname(new_filepath))
+    if hashes_db.exists_identical_file(filepath, subdir):
+        print(f"[{n_processed}] Skipping {filepath} as an identical file already exists.")
+    else:
+        hashes_db.add_file_to_db(subdir, filepath)
+        shutil.move(filepath, new_filepath)
+        print(f"[{n_processed}] Moving {filepath} to {new_filepath}")
 
 
 def process_directory(dirpath: str, outpath: str, delta: int = 0):

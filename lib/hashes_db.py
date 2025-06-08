@@ -29,7 +29,15 @@ def add_file_to_db(library_path: str, subdir: str, filepath: str):
     hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
     if subdir not in hashes_db:
         hashes_db[subdir] = []
-    file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
+    attempt = 0
+    while True:
+        try:
+            file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
+            break
+        except:
+            attempt += 1
+            if attempt >= 3:
+                raise Exception(f"Failed to compute hash for {filepath} after 3 attempts.")
     if not file_hash:
         raise Exception(f"Failed to compute hash for {filepath}.")
     if file_hash not in hashes_db[subdir]:
@@ -55,7 +63,15 @@ def get_all_hashes(library_path: str) -> list[str]:
 
 def exists_identical_file(library_path: str, filepath: str, subdir: str = "") -> bool:
     hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
-    file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
+    attempt = 0
+    while True:
+        try:
+            file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
+            break
+        except:
+            attempt += 1
+            if attempt >= 3:
+                raise Exception(f"Failed to compute hash for {filepath} after 3 attempts.")
     if not file_hash:
         raise Exception(f"Failed to compute hash for {filepath}.")
     if subdir != "" and subdir in hashes_db and subdir != "Dateless":

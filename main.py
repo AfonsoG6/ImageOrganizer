@@ -213,7 +213,7 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
     if hashes_db.exists_identical_file(filepath, subdir):
         print(f"[{n_processed}] Skipping {filepath} as an identical file already exists.")
     else:
-        hashes_db.add_file_to_db(library_path, subdir, filepath)
+        hashes_db.add_file_to_db(subdir, filepath)
         shutil.move(filepath, new_filepath)
         print(f"[{n_processed}] Moving {filepath} to {new_filepath}")
 
@@ -254,6 +254,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     library_path = args.directory
+    hashes_db.load_hashes_db(library_path)
     outpath = args.output
     delta = args.delta
     os.makedirs(args.output, exist_ok=True)

@@ -12,11 +12,11 @@ def process_directory(dirpath: str):
             if not os.path.isfile(filepath):
                 print(f"Skipping {filepath} as it is not a file.")
                 continue
-            if hashes_db.exists_identical_file(library_path, filepath, os.path.basename(dirpath)):
+            if hashes_db.exists_identical_file(filepath, os.path.basename(dirpath)):
                 print(f"Skipping {filepath} as an identical file already exists in the database.")
                 duplicates.append(filepath)
             else:
-                hashes_db.add_file_to_db(library_path, os.path.basename(dirpath), filepath)
+                hashes_db.add_file_to_db(os.path.basename(dirpath), filepath)
     print(f"Finished processing directory {dirpath}.")
 
 

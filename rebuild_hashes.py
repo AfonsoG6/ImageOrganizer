@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import os, re
 from lib import hashes_db
+from lib.color import Color
 
 library_path: str
 duplicates: list[str] = []
@@ -10,10 +11,9 @@ def process_directory(dirpath: str):
         for file in files:
             filepath = os.path.join(root, file)
             if not os.path.isfile(filepath):
-                print(f"Skipping {filepath} as it is not a file.")
                 continue
             if hashes_db.exists_identical_file(filepath, os.path.basename(dirpath)):
-                print(f"Skipping {filepath} as an identical file already exists in the database.")
+                print(Color.color_text(f"[DUP] {os.path.basename(dirpath)}\\{os.path.basename(filepath)}", Color.yellow))
                 duplicates.append(filepath)
             else:
                 hashes_db.add_file_to_db(os.path.basename(dirpath), filepath)
@@ -27,10 +27,10 @@ if __name__ == "__main__":
     library_path = args.directory
     # Verify if the directory is in the expected format
     if not os.path.exists(library_path):
-        print(f"Directory {library_path} does not exist.")
+        print(Color.color_text(f"[!!!] Directory {library_path} does not exist.", Color.red))
         exit(1)
     if not os.path.isdir(library_path):
-        print(f"{library_path} is not a directory.")
+        print(Color.color_text(f"[!!!] {library_path} is not a directory.", Color.red))
         exit(1)
     # Reset the hashes database to start fresh
     hashes_db.reset_hashes_db(library_path)
@@ -38,13 +38,13 @@ if __name__ == "__main__":
         for dir in dirs:
             # Check if the directory name is a year or the special case "Dateless"
             if not re.match(r"^(\d{4}|Dateless)$", dir):
-                print(f"Skipping directory {dir} in {root} as it does not match the expected format.")
+                print(Color.color_text(f"[!!!] Skipping directory {dir} as it does not match the expected format.", Color.yellow))
                 continue
             process_directory(os.path.join(root, dir))
     hashes_db.save_hashes_db()
-    print("Finished rebuilding the hashes database.")
+    print(Color.color_text("[iii] Finished rebuilding the hashes database.", Color.lightgrey))
     if len(duplicates) > 0:
-        print("The following files were skipped as duplicates:")
+        print(Color.color_text("[iii] The following files were skipped as duplicates:", Color.lightgrey))
         for dup in duplicates:
             print("- " + dup)
         print("Do you want to remove these files? (y/n)")
@@ -55,9 +55,9 @@ if __name__ == "__main__":
             for dup in duplicates:
                 try:
                     os.remove(dup)
-                    print(f"Removed duplicate file: {dup}")
+                    print(Color.color_text(f"[iii] Removed duplicate file: {dup}", Color.lightgrey))
                 except Exception as e:
-                    print(f"Failed to remove {dup}: {e}")
+                    print(Color.color_text(f"[!!!] Failed to remove {dup}: {e}", Color.yellow))
     else:
         print("No duplicate files found.")
     print("Done!")

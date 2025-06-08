@@ -54,10 +54,10 @@ def add_file_to_db(subdir: str, filepath: str):
         raise Exception(f"Failed to compute hash for {filepath}.")
     if file_hash not in _hashes_db_cache[subdir]:
         _hashes_db_cache[subdir].append(file_hash)
-        print(Color.color_text(f"[+++] {subdir}\\{os.path.basename(filepath)}: {file_hash}", Color.green))
+        print(Color.color_text(f"[+++] {file_hash} : {subdir}\\{os.path.basename(filepath)}", Color.green))
         _dirty_count += 1
     else:
-        print(Color.color_text(f"[DUP] {subdir}\\{os.path.basename(filepath)}: {file_hash}", Color.yellow))
+        print(Color.color_text(f"[DUP] {file_hash} : {subdir}\\{os.path.basename(filepath)}", Color.yellow))
     if _dirty_count >= MAX_DIRTYNESS:
         save_hashes_db()
         _dirty_count = 0  # Reset dirty count after saving

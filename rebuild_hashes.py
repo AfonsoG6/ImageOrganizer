@@ -5,8 +5,12 @@ from lib import hashes_db
 def process_directory(dirpath: str):
     for root, _, files in os.walk(dirpath):
         for file in files:
-            if file.endswith((".jpg", ".jpeg", ".png", ".mp4")):  # Add more extensions as needed
-                filepath = os.path.join(root, file)
+            filepath = os.path.join(root, file)
+            if not os.path.isfile(filepath):
+                print(f"Skipping {filepath} as it is not a file.")
+                continue
+            hashes_db.add_file_to_db(os.path.basename(dirpath), filepath)
+    print(f"Finished processing directory {dirpath}.")
 
 
 if __name__ == "__main__":
@@ -30,3 +34,4 @@ if __name__ == "__main__":
                 print(f"Skipping directory {dir} in {root} as it does not match the expected format.")
                 continue
             process_directory(os.path.join(root, dir))
+    print("Finished rebuilding the hashes database.")

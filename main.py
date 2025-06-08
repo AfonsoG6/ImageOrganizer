@@ -29,6 +29,7 @@ NAME_FORMATS: list[str] = [
 HASHES_DB_FILENAME = "hashes.json"
 HASHES_DB: dict[str, list[str]]
 
+library_path: str
 n_processed: int = 0
 
 class Tag:
@@ -212,7 +213,7 @@ def process_file(filepath: str, outpath: str, delta: int = 0):
     if hashes_db.exists_identical_file(filepath, subdir):
         print(f"[{n_processed}] Skipping {filepath} as an identical file already exists.")
     else:
-        hashes_db.add_file_to_db(subdir, filepath)
+        hashes_db.add_file_to_db(library_path, subdir, filepath)
         shutil.move(filepath, new_filepath)
         print(f"[{n_processed}] Moving {filepath} to {new_filepath}")
 
@@ -252,8 +253,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    dirpath = args.directory
+    library_path = args.directory
     outpath = args.output
     delta = args.delta
     os.makedirs(args.output, exist_ok=True)
-    process_directory(dirpath, outpath, delta)
+    process_directory(library_path, outpath, delta)

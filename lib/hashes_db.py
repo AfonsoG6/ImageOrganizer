@@ -3,32 +3,30 @@ import json, os, subprocess
 HASHES_DB_FILENAME = "hashes.json"
 
 
-def load_hashes_db() -> dict[str, list[str]]:
+def load_hashes_db(library_path: str) -> dict[str, list[str]]:
     hashes_db: dict[str, list[str]] = {}
-    if os.path.exists(HASHES_DB_FILENAME):
-        with open(HASHES_DB_FILENAME, "r") as f:
+    if os.path.exists(os.path.join(library_path, HASHES_DB_FILENAME)):
+        with open(os.path.join(library_path, HASHES_DB_FILENAME), "r") as f:
             hashes_db = json.load(f)
     else:
         hashes_db = {}
-    print(f"Loaded hashes database with {len(hashes_db)} entries.")
     return hashes_db
 
 
-def save_hashes_db(hashes_db: dict[str, list[str]]):
-    with open(HASHES_DB_FILENAME, "w") as f:
+def save_hashes_db(library_path: str, hashes_db: dict[str, list[str]]):
+    with open(os.path.join(library_path, HASHES_DB_FILENAME), "w") as f:
         json.dump(hashes_db, f)
-    print(f"Saved hashes database with {len(hashes_db)} entries.")
 
 
-def reset_hashes_db():
+def reset_hashes_db(library_path: str):
     hashes_db: dict[str, list[str]] = {}
-    print("Hashes database reset.")
-    with open(HASHES_DB_FILENAME, "w") as f:
+    with open(os.path.join(library_path, HASHES_DB_FILENAME), "w") as f:
         json.dump(hashes_db, f)
+    print("Hashes database reset.")
 
 
-def add_file_to_db(subdir: str, filepath: str):
-    hashes_db: dict[str, list[str]] = load_hashes_db()
+def add_file_to_db(library_path: str, subdir: str, filepath: str):
+    hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
     if subdir not in hashes_db:
         hashes_db[subdir] = []
     file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
@@ -39,28 +37,28 @@ def add_file_to_db(subdir: str, filepath: str):
         print(f"Added hash {file_hash} to subdirectory {subdir}.")
     else:
         print(f"Hash {file_hash} already exists in subdirectory {subdir}, skipping.")
-    save_hashes_db(hashes_db)
+    save_hashes_db(library_path, hashes_db)
 
 
-def get_hashes_for_subdir(subdir: str) -> list[str]:
-    hashes_db: dict[str, list[str]] = load_hashes_db()
+def get_hashes_for_subdir(library_path: str, subdir: str) -> list[str]:
+    hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
     return hashes_db.get(subdir, [])
 
 
-def get_all_hashes() -> list[str]:
-    hashes_db: dict[str, list[str]] = load_hashes_db()
+def get_all_hashes(library_path: str) -> list[str]:
+    hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
     lst = []
     for _, hashes in hashes_db.items():
         lst.extend(hashes)
     return lst
 
 
-def exists_identical_file(filepath: str, subdir: str = "") -> bool:
-    hashes_db: dict[str, list[str]] = load_hashes_db()
+def exists_identical_file(library_path: str, filepath: str, subdir: str = "") -> bool:
+    hashes_db: dict[str, list[str]] = load_hashes_db(library_path)
     file_hash = subprocess.check_output(["sha256sum", filepath]).decode("utf-8").split(" ")[0]
     if not file_hash:
         raise Exception(f"Failed to compute hash for {filepath}.")
     if subdir != "" and subdir in hashes_db and subdir != "Dateless":
         return file_hash in hashes_db.get(subdir, [])
     else:
-        return file_hash in get_all_hashes()
+        return file_hash in get_all_hashes(library_path)

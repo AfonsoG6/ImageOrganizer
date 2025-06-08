@@ -1,8 +1,10 @@
 import json, os, subprocess
 
 HASHES_DB_FILENAME = "hashes.json"
+MAX_DIRTYNESS = 30 # Maximum number of new hashes before saving to disk
 _hashes_db_cache: dict[str, list[str]] = {}  # In-memory cache for the hashes database
 _library_path_cache: str = ""  # Cache for the library path to avoid repeated disk access
+_dirty_count: int = 0  # Counter for unsaved changes
 
 def load_hashes_db(library_path: str):
     """Load the hashes database into memory."""
@@ -35,7 +37,7 @@ def reset_hashes_db(library_path: str):
 
 def add_file_to_db(subdir: str, filepath: str):
     """Add a file's hash to the in-memory database."""
-    global _hashes_db_cache
+    global _hashes_db_cache, _dirty_count
     if subdir not in _hashes_db_cache:
         _hashes_db_cache[subdir] = []
     attempt = 0
@@ -52,9 +54,12 @@ def add_file_to_db(subdir: str, filepath: str):
     if file_hash not in _hashes_db_cache[subdir]:
         _hashes_db_cache[subdir].append(file_hash)
         print(f"Added hash {file_hash} to subdirectory {subdir}.")
+        _dirty_count += 1
     else:
         print(f"Hash {file_hash} already exists in subdirectory {subdir}, skipping.")
-    save_hashes_db()  # Save changes to disk
+    if _dirty_count >= MAX_DIRTYNESS:
+        save_hashes_db()
+        _dirty_count = 0  # Reset dirty count after saving
 
 
 def get_hashes_for_subdir(subdir: str) -> list[str]:

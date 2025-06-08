@@ -259,3 +259,4 @@ if __name__ == "__main__":
     delta = args.delta
     os.makedirs(args.output, exist_ok=True)
     process_directory(library_path, outpath, delta)
+    hashes_db.save_hashes_db()

@@ -1,4 +1,5 @@
 import json, os, subprocess
+from lib.color import Color
 
 HASHES_DB_FILENAME = "hashes.json"
 MAX_DIRTYNESS = 30 # Maximum number of new hashes before saving to disk
@@ -53,10 +54,10 @@ def add_file_to_db(subdir: str, filepath: str):
         raise Exception(f"Failed to compute hash for {filepath}.")
     if file_hash not in _hashes_db_cache[subdir]:
         _hashes_db_cache[subdir].append(file_hash)
-        print(f"Added hash {file_hash} to subdirectory {subdir}.")
+        print(Color.color_text(f"[+++] {subdir}\\{os.path.basename(filepath)}: {file_hash}", Color.green))
         _dirty_count += 1
     else:
-        print(f"Hash {file_hash} already exists in subdirectory {subdir}, skipping.")
+        print(Color.color_text(f"[DUP] {subdir}\\{os.path.basename(filepath)}: {file_hash}", Color.yellow))
     if _dirty_count >= MAX_DIRTYNESS:
         save_hashes_db()
         _dirty_count = 0  # Reset dirty count after saving

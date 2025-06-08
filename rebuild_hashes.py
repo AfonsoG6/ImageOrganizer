@@ -41,6 +41,7 @@ if __name__ == "__main__":
                 print(f"Skipping directory {dir} in {root} as it does not match the expected format.")
                 continue
             process_directory(os.path.join(root, dir))
+    hashes_db.save_hashes_db()
     print("Finished rebuilding the hashes database.")
     if len(duplicates) > 0:
         print("The following files were skipped as duplicates:")

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
-import os, shutil, json, exiftool
+import os, shutil, json, time, exiftool
 from lib import hashes_db
 
 LOG_PATH = "errors.log"
@@ -29,19 +29,15 @@ NAME_FORMATS: list[str] = [
 HASHES_DB_FILENAME = "hashes.json"
 HASHES_DB: dict[str, list[str]]
 
-library_path: str
 n_processed: int = 0
+
 
 class Tag:
     def __init__(self, name: str):
         self.name = name
 
     def check(self, tags: dict):
-        return (
-            self.name in tags
-            and tags[self.name] != "0000:00:00 00:00:00"
-            and tags[self.name] != "0000:00:00 00:00:00+00:00"
-        )
+        return self.name in tags and tags[self.name] != "0000:00:00 00:00:00" and tags[self.name] != "0000:00:00 00:00:00+00:00"
 
     def get(self, tags: dict):
         datestr: str = str(tags[self.name])
@@ -135,9 +131,9 @@ def convert_24(datestr: str) -> str:
     return datestr
 
 
-def get_target_path(original_filepath: str, datestr: str) -> str:
+def get_target_path(original_filepath: str, destination_path: str, datestr: str) -> str:
     year = datestr.split("-")[0]
-    year_path = os.path.join(outpath, year)
+    year_path = os.path.join(destination_path, year)
     if not os.path.exists(year_path):
         os.makedirs(year_path)
     target_name = datestr + get_file_extension(original_filepath)
@@ -167,65 +163,61 @@ def update_metadata(filepath: str, datestr: str):
     except:
         print(f"Failed to run Exiftool on {filepath}, with date {date_for_tags}")
         with open(LOG_PATH, "a") as f:
-            f.write(
-                f"Failed to run Exiftool on {filepath}, with date {date_for_tags}\n"
-            )
+            f.write(f"Failed to run Exiftool on {filepath}, with date {date_for_tags}\n")
 
 
-def process_file(filepath: str, outpath: str, delta: int = 0):
+def process_file(source_filepath: str, destination_path: str, delta: int = 0):
     global n_processed
     if (
-        filepath.endswith(".py")
-        or filepath.endswith(".json")
-        or filepath.endswith(".txt")
-        or filepath.endswith(".md")
-        or filepath.endswith(".html")
+        source_filepath.endswith(".py")
+        or source_filepath.endswith(".json")
+        or source_filepath.endswith(".txt")
+        or source_filepath.endswith(".md")
+        or source_filepath.endswith(".html")
     ):
         return
     with exiftool.ExifToolHelper() as exif:
-        tags = exif.get_metadata([filepath])[0]
+        tags = exif.get_metadata([source_filepath])[0]
     for tag in DATE_TAGS:
         if tag.check(tags):
-            print(f"Found date in tag {tag} for {filepath}")
+            print(f"Found date in tag {tag} for {source_filepath}")
             datestr = tag.get(tags)
-            new_filepath = get_target_path(filepath, datestr)
+            new_filepath = get_target_path(source_filepath, destination_path, datestr)
             break
     else:
-        datestr = get_date_from_filename(filepath)
+        datestr = get_date_from_filename(source_filepath)
         if datestr is not None:
-            print("Found date in filename for", filepath)
+            print("Found date in filename for", source_filepath)
             datestr = add_delta(datestr, delta)
             datestr = convert_24(datestr)
-            update_metadata(filepath, datestr)
-            new_filepath = get_target_path(filepath, datestr)
+            update_metadata(source_filepath, datestr)
+            new_filepath = get_target_path(source_filepath, destination_path, datestr)
         else:
-            print("No date found for", filepath)
+            print("No date found for", source_filepath)
             with open(LOG_PATH, "a") as f:
-                f.write(
-                    f"No date found for {filepath} with metadata {json.dumps(tags)}\n"
-                )
-            datelesspath = os.path.join(outpath, "Dateless")
+                f.write(f"No date found for {source_filepath} with metadata {json.dumps(tags)}\n")
+            datelesspath = os.path.join(destination_path, "Dateless")
             if not os.path.exists(datelesspath):
                 os.makedirs(datelesspath)
-            new_filepath = os.path.join(datelesspath, os.path.basename(filepath))
+            new_filepath = os.path.join(datelesspath, os.path.basename(source_filepath))
     n_processed += 1
     subdir = os.path.basename(os.path.dirname(new_filepath))
-    if hashes_db.exists_identical_file(filepath, subdir):
-        print(f"[{n_processed}] Skipping {filepath} as an identical file already exists.")
+    if hashes_db.exists_identical_file(source_filepath, subdir):
+        print(f"[{n_processed}] Skipping {source_filepath} as an identical file already exists.")
     else:
-        hashes_db.add_file_to_db(subdir, filepath)
-        shutil.move(filepath, new_filepath)
-        print(f"[{n_processed}] Moving {filepath} to {new_filepath}")
+        hashes_db.add_file_to_db(subdir, source_filepath)
+        shutil.move(source_filepath, new_filepath)
+        print(f"[{n_processed}] Moving {source_filepath} to {new_filepath}")
 
 
-def process_directory(dirpath: str, outpath: str, delta: int = 0):
-    print("Fixing directory", dirpath)
-    for name in os.listdir(dirpath):
-        path: str = os.path.join(dirpath, name)
-        if os.path.isdir(path) and not name.startswith(".") and not name == outpath:
-            process_directory(os.path.join(dirpath, name), outpath, delta)
+def process_directory(source_path: str, destination_path: str, delta: int = 0):
+    print("Fixing directory", source_path)
+    for name in os.listdir(source_path):
+        path: str = os.path.join(source_path, name)
+        if os.path.isdir(path) and not name.startswith(".") and not name == destination_path:
+            process_directory(os.path.join(source_path, name), destination_path, delta)
         elif os.path.isfile(path):
-            process_file(os.path.join(dirpath, name), outpath, delta)
+            process_file(os.path.join(source_path, name), destination_path, delta)
         else:
             print("Ignoring", name)
 
@@ -233,15 +225,18 @@ def process_directory(dirpath: str, outpath: str, delta: int = 0):
 if __name__ == "__main__":
     parser = ArgumentParser(description="Fix photos in a directory")
     parser.add_argument(
-        "--directory", "-d", type=str, required=True, help="Directory to fix"
+        "--source",
+        "-s",
+        type=str,
+        required=True,
+        help="Directory from which to read files",
     )
     parser.add_argument(
-        "--output",
-        "-o",
+        "--destination",
+        "-d",
         type=str,
-        default="output",
-        required=False,
-        help="Output directory",
+        required=True,
+        help="Directory to move files to",
     )
     parser.add_argument(
         "--delta",
@@ -253,10 +248,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    library_path = args.directory
-    hashes_db.load_hashes_db(library_path)
-    outpath = args.output
+    source_path = args.source
+    destination_path = args.destination
     delta = args.delta
-    os.makedirs(args.output, exist_ok=True)
-    process_directory(library_path, outpath, delta)
+
+    os.makedirs(destination_path, exist_ok=True)
+    hashes_db.load_hashes_db(source_path)
+    process_directory(source_path, destination_path, delta)
     hashes_db.save_hashes_db()

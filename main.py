@@ -253,6 +253,6 @@ if __name__ == "__main__":
     delta = args.delta
 
     os.makedirs(destination_path, exist_ok=True)
-    hashes_db.load_hashes_db(source_path)
+    hashes_db.load_hashes_db(destination_path)
     process_directory(source_path, destination_path, delta)
     hashes_db.save_hashes_db()

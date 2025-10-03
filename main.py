@@ -73,7 +73,8 @@ DATE_TAGS: list[Tag] = [
     Tag("QuickTime:ModifyDate"),
     Tag("QuickTime:CreateDate"),
     PreconditionedTag("RIFF:StreamCount", "File:FileModifyDate"),
-    Tag("File:FileModifyDate"),
+    # Disable this tag as it often reflects the copy time, not the creation time
+    # Tag("File:FileModifyDate"),
 ]
 
 

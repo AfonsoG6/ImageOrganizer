@@ -169,7 +169,6 @@ def update_metadata(filepath: str, datestr: str):
                 {
                     "File:FileModifyDate": date_for_tags,
                     "File:FileCreateDate": date_for_tags,
-                    "EXIF:DateTimeOriginal": date_for_tags[:-6],
                 },
             )
     except:

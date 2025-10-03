@@ -72,6 +72,9 @@ DATE_TAGS: list[Tag] = [
     Tag("IFD0:ModifyDate"),
     Tag("QuickTime:ModifyDate"),
     Tag("QuickTime:CreateDate"),
+    # ICC profile build timestamp (usually profile creation, NOT photo capture).
+    # Added as a low-priority fallback only when real capture/edit dates are absent.
+    Tag("ICC_Profile:ProfileDateTime"),
     PreconditionedTag("RIFF:StreamCount", "File:FileModifyDate"),
     # Disable this tag as it often reflects the copy time, not the creation time
     # Tag("File:FileModifyDate"),

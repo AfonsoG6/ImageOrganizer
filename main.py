@@ -72,6 +72,10 @@ DATE_TAGS: list[Tag] = [
     Tag("IFD0:ModifyDate"),
     Tag("QuickTime:ModifyDate"),
     Tag("QuickTime:CreateDate"),
+    # Generic/XMP/ IPTC creation dates sometimes present in edited/exported images
+    Tag("XMP:DateCreated"),
+    Tag("IPTC:DateCreated"),  # (paired with IPTC:TimeCreated but ExifTool may merge)
+    Tag("XMP:CreateDate"),
     # ICC profile build timestamp (usually profile creation, NOT photo capture).
     # Added as a low-priority fallback only when real capture/edit dates are absent.
     Tag("ICC_Profile:ProfileDateTime"),

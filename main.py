@@ -66,6 +66,10 @@ class PreconditionedTag(Tag):
 # Either a single tag or a tuple[2] with a precondition tag and the tag to check
 DATE_TAGS: list[Tag] = [
     Tag("EXIF:DateTimeOriginal"),
+    # Prefer embedded EXIF ModifyDate over filesystem modify date so we pick the
+    # true capture/edit time (e.g. 2015) instead of a later copy time
+    Tag("EXIF:ModifyDate"),
+    Tag("IFD0:ModifyDate"),
     Tag("QuickTime:ModifyDate"),
     Tag("QuickTime:CreateDate"),
     PreconditionedTag("RIFF:StreamCount", "File:FileModifyDate"),

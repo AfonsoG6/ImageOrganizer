@@ -186,6 +186,7 @@ def process_file(source_filepath: str, destination_path: str, delta: int = 0):
         or source_filepath.endswith(".txt")
         or source_filepath.endswith(".md")
         or source_filepath.endswith(".html")
+        or source_filepath.endswith("_original")
     ):
         return
     with exiftool.ExifToolHelper() as exif:
